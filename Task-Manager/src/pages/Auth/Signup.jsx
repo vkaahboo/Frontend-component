@@ -1,9 +1,13 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import AuthLayout from '../../components/layouts/AuthLayout'
 import { validateEmail } from '../../utils/helper';
 import ProfilePhotoSelector from '../../components/inputs/ProfilePhotoSelector';
 import Input from '../../components/inputs/input';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axiosInstance from '../../utils/axiosInstance';
+import { API_PATHS } from '../../utils/apiPaths';
+import { UserContext } from '../../context/userContext';
+import uploadImage from '../../utils/uploadImage';
 
 const Signup = () => {
   const [profilePic, setProfilePic] = useState(null);
@@ -14,10 +18,15 @@ const Signup = () => {
 
   const [error, setError] = useState(null);
 
+  const {updateUser} = useContext(UserContext)
+  const navigate = useNavigate();
+
   //Formulario de Registro usuario
   //Registo API 
     const handleSignUp = async (e) => {
       e.preventDefault();
+
+      let profileImageUrl = ''
 
       if(!fullName){
         setError("Por favor introduce tu nombre completo");
@@ -35,10 +44,49 @@ const Signup = () => {
       }
   
       setError("");
+
+      //API call de registro
+      try {
+
+        //subir la imagen si esta disponbible
+        if(profilePic){
+          const imgUploadRes = await uploadImage(profilePic);
+          profileImageUrl = imgUploadRes.imageUrl || "";
+        }
+
+        const response = await axiosInstance.post(API_PATHS.AUTH.REGISTER, {
+          name: fullName,
+          email,
+          password,
+          profileImageUrl,
+          adminInviteToken
+        });
+
+        const { token, role } = response.data;
+
+        if(token){
+          localStorage.setItem("token", token);
+          updateUser(response.data);
+
+          //redireccionamos segun el role
+          if(role === "admin") {
+            navigate("/admin/dashboard")
+          } else {
+            navigate("/user/dashboard");
+          }
+        }
+
+      } catch (error) {
+        if(error.response && error.response.data.message){
+          setError(error.response.data.message)
+        } else {
+          setError("ALgo ha fallado. Intente de nuevo")
+        }
+      }
+
+  }
   
-    };
-
-
+  
   return (
     <AuthLayout>
       <div className="lg:w-[100%] h-auto md:h-full mt-10 md:mt-0 flex flex-col justify-center">
@@ -76,8 +124,8 @@ const Signup = () => {
             />
 
             <Input
-              value={password}
-              onChange={({ target}) => setPassword(target.value)}
+              value={adminInviteToken}
+              onChange={({ target}) => setAdminInviteToken(target.value)}
               label="Invitacion de Administrador"
               placeholder="Introduce 6 digitos"
               type="text"
@@ -100,6 +148,8 @@ const Signup = () => {
       </div>
     </AuthLayout>
   )
-}
+  };
+
+
 
 export default Signup
