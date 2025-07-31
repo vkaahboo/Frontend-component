@@ -8,7 +8,7 @@ export const API_PATHS = {
         //login con la autenticacion del token
         LOGIN: "/api/auth/login",
         //logeado obtengo detalles user
-        GET_PROFILE: "api/auth/profile"
+        GET_PROFILE: "api/auth/profile",
     },
 
     USERS: {
