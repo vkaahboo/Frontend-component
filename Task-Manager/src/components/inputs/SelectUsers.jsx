@@ -3,6 +3,7 @@ import axiosInstance from '../../utils/axiosInstance';
 import { API_PATHS } from '../../utils/apiPaths';
 import { LuUsers } from 'react-icons/lu';
 import Modal from '../Modal';
+import AvatarGroup from '../layouts/AvatarGroup';
 
 const SelectUsers = ({ selectedUsers, setSelectedUsers}) => {
     const [allUsers, setAllUsers] = useState([]);
@@ -58,6 +59,12 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers}) => {
             </button>
         )}
 
+        {selectedUSerAvatars.length > 0 && (
+            <div className="cursor-pointer" onClick={() => setIsModalOpen(true)}>
+                <AvatarGroup avatars={selectedUSerAvatars} maxVisible={3} />
+            </div>
+        )}
+
         <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -70,7 +77,7 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers}) => {
                     className="flex items-center gap-4 p-3 border-b border-gray-200"
                     >
                         <img 
-                        src={user.profileImageUrl}
+                        src={user.profileImageUrl || "/default-avatar.png" }
                         alt={user.name}
                         className="w-10 h-10 rounded-full"
                         />
@@ -95,6 +102,15 @@ const SelectUsers = ({ selectedUsers, setSelectedUsers}) => {
                
                     
                 ))}
+            </div>
+
+            <div className="flex justify-end gap-4 pt-4">
+                <button className="card-btn" onClick={() => setIsModalOpen(false)}>
+                    Cancelar
+                </button>
+                <button className="card-btn-fill" onClick={handleAssign}>
+                    Listo
+                </button>
             </div>
         </Modal>
     </div>

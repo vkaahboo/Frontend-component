@@ -10,6 +10,7 @@ import { LuTrash2 } from 'react-icons/lu'
 import SelectDropdown from '../../components/inputs/SelectDropdown'
 import SelectUsers from '../../components/inputs/SelectUsers'
 import TodoListInput from '../../components/inputs/TodoListInput'
+import AddAttachmentsInput from '../../components/inputs/AddAttachmentsInput'
 
 
 const CreateTask = () => {
@@ -53,10 +54,28 @@ const CreateTask = () => {
 
   //crear task
   const createTask = async () => {
+
+    setLoading(true);
     try {
-      
+      const todoList = taskData.todoCheckList?.map((item) => ({
+        text: item,
+        completed: false,
+      }))
+
+      const response = await axiosInstance.post(API_PATHS.TASK.CEATE_TASKS, {
+        ...taskData,
+        dueDate: new Date(taskData.dueDate).toISOString(),
+        todoCheckList: todoList,
+      });
+
+      toast.success("Tarea creada correctamente")
+
+      clearData();
     } catch (error) {
-      
+      console.error("Error al crear la tarea:", error);
+      setLoading(false)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -71,11 +90,41 @@ const CreateTask = () => {
 
 
   const handleSubmit = async () => {
-    try {
-      
-    } catch (error) {
-      
+    setError(null);
+
+    //input de validacion
+    if(!taskData.title.trim()) {
+      setError("Titulo es requerido");
+      return;
     }
+
+    if(!taskData.description.trim()) {
+      setError("Descripción es requerido");
+      return;
+    }
+
+    if(!taskData.dueDate) {
+      setError("Fecha es requerido");
+      return;
+    }
+
+    if(taskData.assignedTo?.length === 0) {
+      setError("La tarea no esta asignado a ningun miembro");
+      return;
+    }
+
+    if(taskData.todoCheckList?.length === 0) {
+      setError("Add agregar que hacer a la tarea");
+      return;
+    }
+
+    if(taskId) {
+      updateTask();
+      return;
+    }
+
+    createTask();
+
   }
 
   //obtener task por ID
@@ -209,6 +258,33 @@ const CreateTask = () => {
                       handleValueChange("todoCheckList", value)
                     }
                     />
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="text-xs font-medium text-slate-600">
+                      Añadir archivos
+                    </label>
+
+                    <AddAttachmentsInput
+                    attachments={taskData?.attachments}
+                    setAttachments={(value) =>
+                      handleValueChange("attachments", value)
+                    }
+                    />
+                  </div>
+
+                  {error && (
+                    <p className="text-xs font-medium text-red-500 mt-5">{error}</p>
+                  )}
+
+                  <div className="flex justify-end mt-7">
+                    <button
+                    className="add-btn"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    >
+                      {taskId ? "ACTUALIZAR TAREA" : "CREAR TAREA"}
+                    </button>
                   </div>
 
           </div>
